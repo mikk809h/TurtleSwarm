@@ -127,6 +127,8 @@ local function QueueHandler()
     local eventData = { n = 0 }
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
+
+
         WriteAt( math.ceil( width / 2 ), height, "#Q:" .. tostring( #Queue ) )
         local str = "P: "
         for k,v in pairs( Queue ) do
@@ -146,14 +148,16 @@ local function QueueHandler()
                         tFilters[r] = param
                     end
                     if coroutine.status( r ) == "dead" then
+                        AppendFile( "log", "Queue 1, Priority: " .. Queue[ 1 ].Priority .. " is dead!" )
                         remove = true
-                        table.remove( Queue, 1 )
                     end
                 end
             end
             if r and coroutine.status( r ) == "dead" then
+                AppendFile( "log", "Queue 1, Priority: " .. Queue[ 1 ].Priority .. " is dead!" )
                 remove = true
             elseif not r then
+                AppendFile( "log", "Queue 1, No thread exists. Removing contents by index 1" )
                 remove = true
             end
             if remove then
