@@ -168,6 +168,9 @@ local function Listener()
             if type( Run ) == "table" then
                 if type( Run.Action ) == "string" and type( Run.Priority ) == "number" then
                     AppendFile( "log", "Adding new action:\n  Priority = " .. Run.Priority .. "\n  Action = " .. Run.Action )
+                    if Run.AbortAll == true then
+                        Queue = {}
+                    end
                     table.insert( Queue, {
                         Priority = Run.Priority,
                         Thread = coroutine.create( loadstring( Run.Action ) ),
