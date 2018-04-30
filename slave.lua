@@ -66,6 +66,13 @@ print( "Modem initiated" )
 
 Modem.open( 5261 )
 
+local function WriteAt( x, y, str )
+    local ox, oy = term.getCursorPos( )
+    term.setCursorPos( x, y )
+    term.write( tostring( str ) )
+    term.setCursorPos( ox, oy )
+end
+
 local Queue = {}
 --[[
     Queue:
@@ -80,6 +87,7 @@ local function QueueHandler()
     local eventData = { n = 0 }
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
+        WriteAt(math.ceil(width/2), height, "#Q:" .. tostring( #Queue ) )
         if #Queue > 0 then
             local r = Queue[ 1 ].Thread
             if r then
@@ -100,22 +108,16 @@ local function QueueHandler()
             end
         end
         eventData = table.pack( os.pullEventRaw() )
-
-        local ox, oy = term.getCursorPos( )
-        term.setCursorPos( 1, height - 1 )
-        term.clearLine( )
-
         if type( eventData ) == "table" then
             local decodedEvent = table.unpack( eventData )
             if type( decodedEvent ) == "table" then
-                write( table.concat( decodedEvent, ", " ) )
+                WriteAt( 1, height, table.concat( decodedEvent, ", " ) )
             elseif type( decodedEvent ) == "string" or type( decodedEvent ) == "boolean" then
-                write( tostring( decodedEvent ) )
+                WriteAt( 1, height, tostring( decodedEvent ) )
             end
         elseif type( eventData ) == "string" or type( eventData ) == "boolean" then
-            write( tostring( eventData ) )
+            WriteAt( 1, height, tostring( eventData ) )
         end
-        term.setCursorPos( ox, oy )
     end
 end
 
