@@ -101,16 +101,13 @@ local function QueueHandler()
     local eventData = { n = 0 }
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
-        local t = {}
-        for k,v in pairs( Queue ) do t[k] = { Priority = v.Priority } end
-        PrintAt( 1, 4, textutils.serialize( t ), true )
         WriteAt( math.ceil( width / 2 ), height, "#Q:" .. tostring( #Queue ) )
-        -- local str = "P: "
-        -- for k,v in pairs( Queue ) do
-        --     str = str .. k .. ":" .. tostring( v.Priority ) .. " / "
-        -- end
-        -- WriteAt( 1, height - 1, str, true )
-
+        local str = "P: "
+        for k,v in pairs( Queue ) do
+            str = str .. k .. ":" .. tostring( v.Priority ) .. " / "
+        end
+        WriteAt( 1, height - 1, str, true )
+        local remove = false
         if #Queue > 0 then
             local r = Queue[ 1 ].Thread
             if r then
@@ -122,11 +119,17 @@ local function QueueHandler()
                         tFilters[r] = param
                     end
                     if coroutine.status( r ) == "dead" then
+                        remove = true
                         table.remove( Queue, 1 )
                     end
                 end
             end
             if r and coroutine.status( r ) == "dead" then
+                remove = true
+            elseif not r then
+                remove = true
+            end
+            if remove then
                 table.remove( Queue, 1 )
             end
         end
