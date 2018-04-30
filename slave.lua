@@ -1,3 +1,7 @@
+term.clear()
+term.setCursorPos(1,1)
+print("Starting...")
+local width, height = term.getSize()
 -- Get all peripherals
 local Modem = nil
 sleep(.05)
@@ -97,8 +101,9 @@ local function QueueHandler()
         end
         eventData = table.pack( os.pullEventRaw() )
         local ox, oy = term.getCursorPos()
-        term.setCursorPos(1,1)
-        print(tostring(table.concat(eventData, ", ")))
+        term.setCursorPos(1,height-1)
+        term.clearLine()
+        term.write(tostring(table.concat(eventData, ", ")))
         term.setCursorPos(ox, oy)
     end
 end
