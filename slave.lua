@@ -32,11 +32,11 @@ end
 local function AppendFile( file, str )
     if not fs.exists( file ) then
         local handle = fs.open( file, "w" )
-        handle.write( str )
+        handle.write( str .. "\n" )
         handle.close()
     else
         local handle = fs.open( file, "a" )
-        handle.write( str )
+        handle.write( str .. "\n" )
         handle.close()
     end
 end
