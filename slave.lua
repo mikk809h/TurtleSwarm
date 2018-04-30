@@ -16,22 +16,14 @@ for _,v in pairs( peripheral.getNames( ) ) do
 end
 
 local function WriteAt( x, y, str, cll )
-    local ox, oy = term.getCursorPos( )
-    term.setCursorPos( x, y )
-    if cll then
-        term.clearLine()
-    end
-    term.write( tostring( str ) )
-    term.setCursorPos( ox, oy )
+    local ox, oy = term.getCursorPos( ) term.setCursorPos( x, y )
+    if cll then term.clearLine() end
+    term.write( tostring( str ) ) term.setCursorPos( ox, oy )
 end
 local function PrintAt( x, y, str, cll )
-    local ox, oy = term.getCursorPos( )
-    term.setCursorPos( x, y )
-    if cll then
-        term.clearLine()
-    end
-    print( tostring( str ) )
-    term.setCursorPos( ox, oy )
+    local ox, oy = term.getCursorPos( ) term.setCursorPos( x, y )
+    if cll then term.clearLine() end
+    print( tostring( str ) ) term.setCursorPos( ox, oy )
 end
 
 local function SelectEmpty()
@@ -94,6 +86,25 @@ local Queue = {}
         Priority = 1,
         Thread = nil,
     }
+]]
+
+--
+
+--[[
+    Normal priority is added
+
+    Then high priority is added.
+
+    Then low priority is added.
+
+EXPECTATION:
+    Normal runs for 1 second and pauses while high priority is running.
+    Then Normal should continue.
+    When Normal is done Low priority should begin.
+
+REALITY:
+    Normal runs for 1 second and stops. Then high priority action is running.
+    When high priority is done it runs the low priority action instead of continuing the normal priority.
 ]]
 
 local function QueueHandler()
