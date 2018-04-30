@@ -37,9 +37,12 @@ function VersionControl:Master()
     if handle then
         local server_version = handle.readAll()
         handle.close()
-        local handle = fs.open("master.lua", "r")
-        local client_version = handle.readAll()
-        handle.close()
+        local client_version = ""
+        if fs.exists("master.lua") then
+            local handle = fs.open("master.lua", "r")
+            client_version = handle.readAll()
+            handle.close()
+        end
         -- Compare versions
         if server_version ~= client_version then
             print("Update available")
