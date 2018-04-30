@@ -95,7 +95,7 @@ local function QueueHandler()
         WriteAt( math.ceil( width / 2 ), height, "#Q:" .. tostring( #Queue ) )
         local str = "P: "
         for k,v in pairs( Queue ) do
-            str = str .. " / " .. tostring( Queue[ 1 ].Priority )
+            str = str .. k .. ":" .. tostring( v.Priority ) .. " / "
         end
         WriteAt( 1, height - 1, str, true )
 
