@@ -93,13 +93,13 @@ local function QueueHandler()
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
         WriteAt( math.ceil( width / 2 ), height, "#Q:" .. tostring( #Queue ) )
-        if #Queue > 0 then
-            local str = "P: "
-            for k,v in pairs( Queue ) do
-                str = str .. " / " .. tostring( Queue[ 1 ].Priority )
-            end
-            WriteAt( 1, height - 1, str, true )
+        local str = "P: "
+        for k,v in pairs( Queue ) do
+            str = str .. " / " .. tostring( Queue[ 1 ].Priority )
+        end
+        WriteAt( 1, height - 1, str, true )
 
+        if #Queue > 0 then
             local r = Queue[ 1 ].Thread
             if r then
                 if tFilters[ r ] == nil or tFilters[ r ] == eventData[ 1 ] or eventData[ 1 ] == "terminate" then
