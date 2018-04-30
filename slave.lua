@@ -100,10 +100,17 @@ local function QueueHandler()
             end
         end
         eventData = table.pack( os.pullEventRaw() )
+
         local ox, oy = term.getCursorPos( )
         term.setCursorPos( 1, height - 1 )
         term.clearLine( )
-        term.write( tostring( table.concat( table.unpack( eventData ), ", " ) ) )
+
+        if type( eventData ) == "table" then
+            local decodedEvent = table.unpack( eventData )
+            write( table.concat( decodedEvent, ", " ) )
+        elseif type( eventData ) == "string" or type( eventData ) == "boolean" then
+            write( tostring( eventData ) )
+        end
         term.setCursorPos( ox, oy )
     end
 end
