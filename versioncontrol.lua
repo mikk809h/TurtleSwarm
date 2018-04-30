@@ -12,7 +12,7 @@ function VersionControl:Slave()
         local server_version = handle.readAll()
         handle.close()
         local client_version = ""
-        if fs.exist("slave.lua") then
+        if fs.exists("slave.lua") then
             local handle = fs.open("slave.lua", "r")
             client_version = handle.readAll()
             handle.close()
