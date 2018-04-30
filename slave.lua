@@ -103,31 +103,12 @@ local Queue = {}
     }
 ]]
 
---
-
---[[
-    Normal priority is added
-
-    Then high priority is added.
-
-    Then low priority is added.
-
-EXPECTATION:
-    Normal runs for 1 second and pauses while high priority is running.
-    Then Normal should continue.
-    When Normal is done Low priority should begin.
-
-REALITY:
-    Normal runs for 1 second and stops. Then high priority action is running.
-    When high priority is done it runs the low priority action instead of continuing the normal priority.
-]]
-
 local function QueueHandler()
     local tFilters = { }
     local eventData = { n = 0 }
     while true do
-        table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
-        local remove = false
+        table.sort( Queue, function( A, B ) return A.Priority > B.Priority end )
+        local Remove = false
         if #Queue > 0 then
             local r = Queue[ 1 ].Thread
             if r then
@@ -141,18 +122,18 @@ local function QueueHandler()
                     end
                     if coroutine.status( r ) == "dead" then
                         AppendFile( "log", "Queue 1, Priority: " .. Queue[ 1 ].Priority .. " is dead!" )
-                        remove = true
+                        Remove = true
                     end
                 end
             end
             if r and coroutine.status( r ) == "dead" then
                 AppendFile( "log", "Queue 1, Priority: " .. Queue[ 1 ].Priority .. " is dead!" )
-                remove = true
+                Remove = true
             elseif not r then
                 AppendFile( "log", "Queue 1, No thread exists. Removing contents by index 1" )
-                remove = true
+                Remove = true
             end
-            if remove then
+            if Remove then
                 AppendFile( "log", "Removing table contents at 1. Content:\n  Priority = " .. Queue[ 1 ].Priority )
                 table.remove( Queue, 1 )
             end
@@ -168,8 +149,10 @@ local function Listener()
             if type( Run ) == "table" then
                 if type( Run.Action ) == "string" and type( Run.Priority ) == "number" then
                     AppendFile( "log", "Adding new action:\n  Priority = " .. Run.Priority .. "\n  Action = " .. Run.Action )
+
                     if Run.AbortAll == true then
-                        Queue = {}
+                        AppendFile( "log", "  Aborting all other Queued actions..." )
+                        Queue = { }
                     end
                     table.insert( Queue, {
                         Priority = Run.Priority,
