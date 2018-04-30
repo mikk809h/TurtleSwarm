@@ -1,16 +1,19 @@
+-- Get all peripherals
+local Modem = nil
+sleep(.05)
 
-
-sleep(1)
-for k,v in pairs(peripheral.getNames()) do
-    local _type = peripheral.getType(v)
-    if _type == "turtle" or _type == "computer" then
+for _,v in pairs(peripheral.getNames()) do
+    local tPeripheral = peripheral.getType(v)
+    if tPeripheral == "turtle" or tPeripheral == "computer" then
         peripheral.call(v, "turnOn")
+    elseif tPeripheral == "modem" then
+        Modem = peripheral.wrap(v)
     end
 end
-function selectEmpty()
+
+local function SelectEmpty()
     for i = 1, 16 do
-        if turtle.getItemCount(i) > 0 then
-        else
+        if turtle.getItemCount(i) == 0 then
             turtle.select(i)
             return true
         end
@@ -27,24 +30,108 @@ function selectEmpty()
     end
     return false
 end
-sleep(1)
-modem = peripheral.wrap("right")
-local e = 0
-while modem == nil do
-    if e == 5 then
-        error("Modem error", 0)
+
+local function FindModem()
+    for i = 1, 16 do
+        if turtle.getItemCount(i) > 0 then
+            local e = turtle.getItemDetail(i)
+            if e.name == "computercraft:peripheral" or e.name == "computercraft:modem" then
+                turtle.select(i)
+                turtle.equipRight()
+            end
+        end
     end
-    print("Missing modem")
-    print("Reequipping modem")
-    selectEmpty()
-    turtle.equipRight()
-    sleep(2)
-    turtle.equipRight()
-    modem = peripheral.wrap("right")
-    e = e + 1
 end
 
+-- Validate modem
+if not Modem then
+    print("Retrying modem...")
+    FindModem()
+    Modem = peripheral.wrap("right")
+    while not Modem do
+        print("Retrying modem...")
+        SelectEmpty()
+        turtle.equipRight()
+        sleep(.5)
+        turtle.equipRight()
+        sleep(1)
+        Modem = peripheral.wrap("right")
+    end
+end
+print("Modem initiated")
+
 modem.open(5261)
+
+local Queue = {}
+--[[
+    Queue:
+    {
+        Priority = 1,
+        Thread = nil,
+    }
+]]
+
+local function QueueHandler()
+    while true do
+        -- Sort by highest priority
+        table.sort(Queue, function(compare1, compare2) return compare1.Priority > compare2.Priority end)
+
+-- Only run the highest priority job
+        if type(Queue[1]) == "table" then
+            if type(Queue[1].Thread) == "thread" then
+                local status = coroutine.status(Queue[1].Thread)
+                if status == "suspended" then
+                    coroutine.resume(Queue[1].Thread)
+                elseif status == "dead" then
+                    table.remove(1)
+                end
+            end
+        end
+        sleep(1)
+    end
+end
+
+local function Listener()
+    while true do
+        local Event, ID, Channel, ReplyChannel, Run, Distance = os.pullEvent()
+        if Event == "modem_message" then
+            if type(Run) == "table" then
+                if type(Run.Action) == "string" and type(Run.Priority) == "number" then
+                    table.insert(Queue, {
+                        Priority = Run.Priority,
+                        Thread = coroutine.create(Run.Action),
+                    })
+                end
+            end
+        end
+    end
+end
+
+local function SelfHandler()
+    while true do
+        local FuelLevel = turtle.getFuelLevel()
+        os.setComputerLabel("BoofySloofy|" .. tostring(FuelLevel))
+        sleep(2)
+    end
+end
+
+local Threads = {
+    coroutine.create(SelfHandler),
+    coroutine.create(Listener),
+    coroutine.create(QueueHandler),
+}
+-- Main loop
+while true do
+    for k, v in pairs(Threads) do
+        local state = coroutine.status(v)
+        if state == "suspended" then
+            coroutine.resume(v)
+        end
+    end
+end
+
+
+
 local action = {}
 
 
