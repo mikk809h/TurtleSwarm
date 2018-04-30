@@ -15,9 +15,12 @@ for _,v in pairs( peripheral.getNames( ) ) do
     end
 end
 
-local function WriteAt( x, y, str )
+local function WriteAt( x, y, str, cll )
     local ox, oy = term.getCursorPos( )
     term.setCursorPos( x, y )
+    if cll then
+        term.clearLine()
+    end
     term.write( tostring( str ) )
     term.setCursorPos( ox, oy )
 end
@@ -93,9 +96,9 @@ local function QueueHandler()
         if #Queue > 0 then
             local str = "P: "
             for k,v in pairs( Queue ) do
-                str = str .." / " .. tostring( Queue[ 1 ].Priority )
+                str = str .. " / " .. tostring( Queue[ 1 ].Priority )
             end
-            WriteAt( 1, height - 1, str )
+            WriteAt( 1, height - 1, str, true )
 
             local r = Queue[ 1 ].Thread
             if r then
@@ -119,12 +122,12 @@ local function QueueHandler()
         if type( eventData ) == "table" then
             local decodedEvent = table.unpack( eventData )
             if type( decodedEvent ) == "table" then
-                WriteAt( 1, height, table.concat( decodedEvent, ", " ) )
+                WriteAt( 1, height, table.concat( decodedEvent, ", " ), true )
             elseif type( decodedEvent ) == "string" or type( decodedEvent ) == "boolean" then
-                WriteAt( 1, height, tostring( decodedEvent ) )
+                WriteAt( 1, height, tostring( decodedEvent ), true )
             end
         elseif type( eventData ) == "string" or type( eventData ) == "boolean" then
-            WriteAt( 1, height, tostring( eventData ) )
+            WriteAt( 1, height, tostring( eventData ), true )
         end
     end
 end
