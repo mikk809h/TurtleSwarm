@@ -60,7 +60,7 @@ if not Modem then
 end
 print("Modem initiated")
 
-modem.open(5261)
+Modem.open(5261)
 
 local Queue = {}
 --[[
