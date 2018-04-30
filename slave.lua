@@ -1,6 +1,8 @@
 term.clear( )
 term.setCursorPos( 1, 1 )
 print( "Starting..." )
+if fs.exists("log") then fs.delete("log") end
+
 local width, height = term.getSize( )
 -- Get all peripherals
 local Modem = nil
@@ -20,13 +22,26 @@ local function WriteAt( x, y, str, cll )
     if cll then term.clearLine() end
     term.write( tostring( str ) ) term.setCursorPos( ox, oy )
 end
+
 local function PrintAt( x, y, str, cll )
     local ox, oy = term.getCursorPos( ) term.setCursorPos( x, y )
     if cll then term.clearLine() end
     print( tostring( str ) ) term.setCursorPos( ox, oy )
 end
 
-local function SelectEmpty()
+local function AppendFile( file, str )
+    if not fs.exists( file ) then
+        local handle = fs.open( file, "w" )
+        handle.write( str )
+        handle.close()
+    else
+        local handle = fs.open( file, "a" )
+        handle.write( str )
+        handle.close()
+    end
+end
+
+local function SelectEmpty( )
     for i = 1, 16 do
         if turtle.getItemCount( i ) == 0 then
             turtle.select( i )
@@ -46,7 +61,7 @@ local function SelectEmpty()
     return false
 end
 
-local function FindModem()
+local function FindModem( )
     for i = 1, 16 do
         if turtle.getItemCount( i ) > 0 then
             local e = turtle.getItemDetail( i )
@@ -123,6 +138,7 @@ local function QueueHandler()
             local r = Queue[ 1 ].Thread
             if r then
                 if tFilters[ r ] == nil or tFilters[ r ] == eventData[ 1 ] or eventData[ 1 ] == "terminate" then
+                    AppendFile( "log", "Resuming thread at Queue 1: " .. Queue[ 1 ].Priority )
                     local ok, param = coroutine.resume( r, table.unpack( eventData, 1, eventData.n ) )
                     if not ok then
                         error( param, 0 )
@@ -141,6 +157,7 @@ local function QueueHandler()
                 remove = true
             end
             if remove then
+                AppendFile( "log", "Removing table contents at 1. Content:\n  Priority = " .. Queue[ 1 ].Priority )
                 table.remove( Queue, 1 )
             end
         end
@@ -164,6 +181,7 @@ local function Listener()
         if Event == "modem_message" then
             if type( Run ) == "table" then
                 if type( Run.Action ) == "string" and type( Run.Priority ) == "number" then
+                    AppendFile( "log", "Adding new action:\n  Priority = " .. Run.Priority .. "\n  Action = " .. Run.Action )
                     table.insert( Queue, {
                         Priority = Run.Priority,
                         Thread = coroutine.create( loadstring( Run.Action ) ),
