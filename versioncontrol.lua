@@ -11,9 +11,12 @@ function VersionControl:Slave()
     if handle then
         local server_version = handle.readAll()
         handle.close()
-        local handle = fs.open("slave.lua", "r")
-        local client_version = handle.readAll()
-        handle.close()
+        local client_version = ""
+        if fs.exist("slave.lua") then
+            local handle = fs.open("slave.lua", "r")
+            client_version = handle.readAll()
+            handle.close()
+        end
         -- Compare versions
         if server_version ~= client_version then
             print("Update available")
