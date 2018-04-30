@@ -26,6 +26,8 @@ function VersionControl:Slave()
             print("Update installed. Rebooting")
             error("REBOOT HERE", 0)
             --os.reboot()
+        else
+            print("No update available")
         end
     end
     print("Done")
@@ -52,6 +54,8 @@ function VersionControl:Master()
             print("Update installed. Rebooting")
             error("REBOOT HERE", 0)
             --os.reboot()
+        else
+            print("No update available")
         end
     end
     print("Done")
