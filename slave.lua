@@ -98,7 +98,7 @@ local function QueueHandler()
         eventData = table.pack( os.pullEventRaw() )
         local ox, oy = term.getCursorPos()
         term.setCursorPos(1,1)
-        print(table.concat(eventData, ", "))
+        print(tostring(table.concat(eventData, ", ")))
         term.setCursorPos(ox, oy)
     end
 end
