@@ -127,14 +127,6 @@ local function QueueHandler()
     local eventData = { n = 0 }
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
-
-
-        WriteAt( math.ceil( width / 2 ), height, "#Q:" .. tostring( #Queue ) )
-        local str = "P: "
-        for k,v in pairs( Queue ) do
-            str = str .. k .. ":" .. tostring( v.Priority ) .. " / "
-        end
-        WriteAt( 1, height - 1, str, true )
         local remove = false
         if #Queue > 0 then
             local r = Queue[ 1 ].Thread
@@ -166,16 +158,6 @@ local function QueueHandler()
             end
         end
         eventData = table.pack( os.pullEventRaw() )
-        if type( eventData ) == "table" then
-            local decodedEvent = table.unpack( eventData )
-            if type( decodedEvent ) == "table" then
-                WriteAt( 1, height, table.concat( decodedEvent, ", " ), true )
-            elseif type( decodedEvent ) == "string" or type( decodedEvent ) == "boolean" then
-                WriteAt( 1, height, tostring( decodedEvent ), true )
-            end
-        elseif type( eventData ) == "string" or type( eventData ) == "boolean" then
-            WriteAt( 1, height, tostring( eventData ), true )
-        end
     end
 end
 
@@ -198,13 +180,15 @@ local function Listener()
 end
 
 local function SelfHandler()
+    local OldFuelLevel = -1
     while true do
         local FuelLevel = turtle.getFuelLevel( )
-        os.setComputerLabel( "BoofySloofy|" .. tostring( FuelLevel ) )
+        if OldFuelLevel ~= FuelLevel then
+            os.setComputerLabel( "BoofySloofy|" .. tostring( FuelLevel ) )
+            OldFuelLevel = FuelLevel
+        end
         sleep( 2 )
     end
 end
-
-
 
 parallel.waitForAll( QueueHandler, Listener, SelfHandler )
