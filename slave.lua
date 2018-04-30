@@ -1,31 +1,3 @@
--- First try to update
-sleep(.25)
-local rawUrl = "https://raw.githubusercontent.com/mikk809h/TurtleSwarm/master/slave.lua"
-local handle = http.get(rawUrl)
-if handle then
-    local server_version = handle.readAll()
-    handle.close()
-    local handle = fs.open(shell.getRunningProgram(), "r")
-    local client_version = handle.readAll()
-    handle.close()
-
-    if server_version ~= client_version then
-        print("Update available")
-        local handle = fs.open(shell.getRunningProgram(), "w")
-        handle.write(server_version)
-        handle.close()
-        print("Update installed. Rebooting")
-        error("REBOOT HERE", 0)
-        --os.reboot()
-    end
-end
-
-
-
-
-
-
-
 
 
 sleep(1)
