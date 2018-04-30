@@ -76,24 +76,30 @@ local function QueueHandler()
     local eventData = { n = 0 }
     while true do
         table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
-        local r = Queue[1].Thread
-        if r then
-            if tFilters[r] == nil or tFilters[r] == eventData[1] or eventData[1] == "terminate" then
-                local ok, param = coroutine.resume( r, table.unpack( eventData, 1, eventData.n ) )
-                if not ok then
-                    error( param, 0 )
-                else
-                    tFilters[r] = param
-                end
-                if coroutine.status( r ) == "dead" then
-                    table.remove( Queue, 1 )
+        if #Queue > 0 then
+            local r = Queue[1].Thread
+            if r then
+                if tFilters[r] == nil or tFilters[r] == eventData[1] or eventData[1] == "terminate" then
+                    local ok, param = coroutine.resume( r, table.unpack( eventData, 1, eventData.n ) )
+                    if not ok then
+                        error( param, 0 )
+                    else
+                        tFilters[r] = param
+                    end
+                    if coroutine.status( r ) == "dead" then
+                        table.remove( Queue, 1 )
+                    end
                 end
             end
-        end
-        if r and coroutine.status( r ) == "dead" then
-            table.remove( Queue, 1 )
+            if r and coroutine.status( r ) == "dead" then
+                table.remove( Queue, 1 )
+            end
         end
         eventData = table.pack( os.pullEventRaw() )
+        local ox, oy = term.getCursorPos()
+        term.setCursorPos(1,1)
+        print(table.concat(eventData, ", "))
+        term.setCursorPos(ox, oy)
     end
 end
 
