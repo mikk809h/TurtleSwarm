@@ -72,22 +72,28 @@ local Queue = {}
 ]]
 
 local function QueueHandler()
+    local tFilters = { }
+    local eventData = { n = 0 }
     while true do
-        -- Sort by highest priority
-        table.sort(Queue, function(compare1, compare2) return compare1.Priority > compare2.Priority end)
-
--- Only run the highest priority job
-        if type(Queue[1]) == "table" then
-            if type(Queue[1].Thread) == "thread" then
-                local status = coroutine.status(Queue[1].Thread)
-                if status == "suspended" then
-                    coroutine.resume(Queue[1].Thread)
-                elseif status == "dead" then
-                    table.remove(1)
+        table.sort( Queue, function( compare1, compare2 ) return compare1.Priority > compare2.Priority end )
+        local r = Queue[1].Thread
+        if r then
+            if tFilters[r] == nil or tFilters[r] == eventData[1] or eventData[1] == "terminate" then
+                local ok, param = coroutine.resume( r, table.unpack( eventData, 1, eventData.n ) )
+                if not ok then
+                    error( param, 0 )
+                else
+                    tFilters[r] = param
+                end
+                if coroutine.status( r ) == "dead" then
+                    table.remove( Queue, 1 )
                 end
             end
         end
-        sleep(1)
+        if r and coroutine.status( r ) == "dead" then
+            table.remove( Queue, 1 )
+        end
+        eventData = table.pack( os.pullEventRaw() )
     end
 end
 
@@ -101,6 +107,7 @@ local function Listener()
                         Priority = Run.Priority,
                         Thread = coroutine.create(Run.Action),
                     })
+                    os.queueEvent("BEGIN_THREAD")
                 end
             end
         end
@@ -115,107 +122,6 @@ local function SelfHandler()
     end
 end
 
-local Threads = {
-    coroutine.create(SelfHandler),
-    coroutine.create(Listener),
-    coroutine.create(QueueHandler),
-}
--- Main loop
-while true do
-    for k, v in pairs(Threads) do
-        local state = coroutine.status(v)
-        if state == "suspended" then
-            coroutine.resume(v)
-        end
-    end
-end
 
 
-
-local action = {}
-
-
-function listener()
-    while true do
-        local event, a, b, c, run, e = os.pullEvent()
-        if event == "modem_message" then
-            if type(run) == "table" then
-                if type(run.action) == "string" then
-                    table.insert(action, run.action)
-                end
-            end
-        end
-    end
-end
-
-function runQueue()
-    for k in pairs(action) do
-        print("Running action: " .. tostring(k))
-        local ok, err = pcall(loadstring(action[k]))
-        if not ok then
-            print("Action->Error: " .. tostring(err))
-        end
-        table.remove(action, k)
-        break
-    end
-end
-
-function one()
-    while true do
-        local ok, err = pcall(listener)
-        if not ok then
-            print("ERROR : " .. tostring(err))
-        end
-        sleep(1)
-    end
-end
-
-function two()
-    while true do
-        local ok, err = pcall(runQueue)
-        if not ok then
-            print("ERROR : " .. tostring(err))
-        end
-        sleep(1)
-    end
-end
-
-function draw()
-    local oldFuel = -1
-    local width, height = term.getSize()
-    local u = 1
-    local ox, oy, oz = -1, -1, -1
-    while true do
-        local currentfuel = turtle.getFuelLevel()
-        if oldFuel ~= currentfuel then
-            os.setComputerLabel("BoofySloofy_F:" .. currentfuel)
-            oldFuel = currentfuel
-        end
-        local x, y, z = nil, nil, nil
-        if u == 1 then
-            x,y,z = gps.locate(2)
-            ox, oy, oz = x, y, z
-        end
-
-        local pr = "F: " .. turtle.getFuelLevel()
-        pr = pr .. " T: " .. textutils.formatTime(os.time(), true)
-        if x == nil and y == nil and z == nil then
-            pr = pr .. " L!:" .. tostring(ox) .. ", " .. tostring(oy) .. ", " .. tostring(oz)
-        else
-            pr = pr .. " L: " .. tostring(x) .. ", " .. tostring(y) .. ", " .. tostring(z)
-        end
-        pr = pr .. " " .. tostring(u)
-        pr = pr .. string.rep(" ", width-#pr)
-
-        term.setCursorPos(1, height - 1)
-        term.write(string.rep("=", width))
-        term.setCursorPos(1, height)
-        term.write(pr)
-
-        term.setCursorPos(1, 1)
-        sleep(1)
-        u = u < 25 and u + 1 or 1
-    end
-end
-
-parallel.waitForAll(one, two, draw)
+parallel.waitForAll(QueueHandler, Listener, SelfHandler)
