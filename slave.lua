@@ -107,7 +107,11 @@ local function QueueHandler()
 
         if type( eventData ) == "table" then
             local decodedEvent = table.unpack( eventData )
-            write( table.concat( decodedEvent, ", " ) )
+            if type( decodedEvent ) == "table" then
+                write( table.concat( decodedEvent, ", " ) )
+            elseif type( decodedEvent ) == "string" or type( decodedEvent ) == "boolean" then
+                write( tostring( decodedEvent ) )
+            end
         elseif type( eventData ) == "string" or type( eventData ) == "boolean" then
             write( tostring( eventData ) )
         end
