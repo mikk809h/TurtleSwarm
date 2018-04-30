@@ -127,7 +127,7 @@ local function Listener()
                 if type( Run.Action ) == "string" and type( Run.Priority ) == "number" then
                     table.insert( Queue, {
                         Priority = Run.Priority,
-                        Thread = coroutine.create( Run.Action ),
+                        Thread = coroutine.create( loadstring( Run.Action ) ),
                     } )
                     os.queueEvent( "BEGIN_THREAD" )
                 end
